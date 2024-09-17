@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Valley Rain</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: white; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Valley creation
+        const geometry = new THREE.PlaneGeometry(100, 100, 100, 100);
+        for (let i = 0; i < geometry.vertices.length; i++) {
+            geometry.vertices[i].z = Math.sin(geometry.vertices[i].x * 0.1) * Math.cos(geometry.vertices[i].y * 0.1) * 5;
+        }
+        geometry.rotateX(-Math.PI / 2);
+
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        const valley = new THREE.Mesh(geometry, material);
+        scene.add(valley);
+
+        // Number rain
+        const numbers = [];
+        const numberGeometry = new THREE.TextGeometry('0123456789', {
+            font: new THREE.FontLoader().parse({
+                // Assuming you have a JSON font file or use a CDN for Three.js fonts
+            }),
+            size: 1,
+            height: 0.1
+        });
+
+        function createRainDrop() {
+            const number = new THREE.Mesh(numberGeometry, new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+            number.position.set(
+                (Math.random() - 0.5) * 100,
+                (Math.random() - 0.5) * 100,
+                50
+            );
+            scene.add(number);
+            numbers.push({ mesh: number, speed: Math.random() * 0.1 + 0.05 });
+        }
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            numbers.forEach((num, index) => {
+                num.mesh.position.z -= num.speed;
+                if (num.mesh.position.z < valley.position.z) {
+                    // Here, instead of removing, you might want to adjust its position to stick to the valley
+                    num.mesh.position.z = valley.position.z + 0.1; // Slight offset to avoid z-fighting
+                    num.speed = 0; // Stop the number from falling further
+                }
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Responsiveness
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initial setup
+        camera.position.z = 100;
+        for(let i = 0; i < 100; i++) createRainDrop();
+        animate();
+    </script>
+</body>
+</html>

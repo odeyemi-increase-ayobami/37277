@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Matrix Valley</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; overflow: hidden; background: white; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    // Scene, Camera, Renderer setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Position camera
+    camera.position.z = 5;
+
+    // Create Valley
+    const geometry = new THREE.PlaneGeometry(20, 20, 50, 50);
+    for (let i = 0; i < geometry.vertices.length; i++) {
+        geometry.vertices[i].z = Math.random() * 3 - 1.5; // Random displacement for valley effect
+    }
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+    const valley = new THREE.Mesh(geometry, material);
+    scene.add(valley);
+
+    // Function to create number particles
+    function createNumberParticle() {
+        const numberGeometry = new THREE.TextGeometry(Math.floor(Math.random() * 10).toString(), {
+            font: new THREE.FontLoader().parse({/* JSON font data */}), // You'll need to load a font
+            size: 0.1,
+            height: 0.01
+        });
+        const numberMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const number = new THREE.Mesh(numberGeometry, numberMaterial);
+        
+        number.position.x = (Math.random() - 0.5) * 20;
+        number.position.y = 10;
+        number.position.z = (Math.random() - 0.5) * 20;
+        scene.add(number);
+        return number;
+    }
+
+    // Array to hold number particles
+    let numbers = [];
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        numbers.forEach((num, index) => {
+            num.position.y -= 0.05;
+            if (num.position.y < -10) {
+                scene.remove(num);
+                numbers.splice(index, 1);
+            }
+        });
+
+        if(Math.random() < 0.1) { // Control rain density
+            numbers.push(createNumberParticle());
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Responsive design
+    window.addEventListener('resize', onWindowResize, false);
+    function onWindowResize(){
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+</script>
+
+</body>
+</html>
